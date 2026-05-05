@@ -4,4 +4,44 @@ author: "Lucas Moratilla Lapeña"
 date: "2026-05-05"
 output: html_document
 ---
+# Introducción
 
+
+
+# Descripción de los datos 
+```{r instalacion paquetes, include=FALSE, message=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+if (!requireNamespace("SummarizedExperiment", quietly = TRUE))
+    BiocManager::install("SummarizedExperiment")
+library(SummarizedExperiment)
+
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+library(edgeR)
+
+if (!requireNamespace("limma", quietly = TRUE))
+    BiocManager::install("limma")
+library(limma)
+```
+```{r carga datos, include=FALSE}
+#cargamos los datos desde el repositorio github
+load("PEC2_GSE50760_colorectal_SE.Rda")
+```
+```{r exploracion se, include=FALSE}
+#exploramos las dimensiones de se para ver muestras y genes
+dim(se)
+#exploramos assay
+assayNames(se)
+#exploramos colData
+colnames(colData(se))
+#exploramos rowData
+colnames(rowData(se))
+#exploramos la variable condition para verificar el numero de muestras
+table(se$condition)
+#para verificar la estructura apareada del diseño experimental, 
+#debemos enfrentar a cada paciente con condition 
+table(se$patient_id, se$condition)
+```
+La estructura inicial de nuestro objeto SummarizedExperiment ("se") recoge la información de 54 muestras de tejido de 18 pacientes con cáncer colorrectal. De cada paciente se recogió una muestra de tejido normal, tumor primario y metástasis hepática, apareada de dicha manera a nivel experimental, constituyendo así el número total de 54 muestras. El objeto "se" recoge a su vez la información de 39376 genes estudiados en estas 54 muestras. 
