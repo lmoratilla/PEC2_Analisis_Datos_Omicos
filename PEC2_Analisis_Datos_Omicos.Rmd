@@ -44,4 +44,36 @@ table(se$condition)
 #debemos enfrentar a cada paciente con condition 
 table(se$patient_id, se$condition)
 ```
-La estructura inicial de nuestro objeto SummarizedExperiment ("se") recoge la información de 54 muestras de tejido de 18 pacientes con cáncer colorrectal. De cada paciente se recogió una muestra de tejido normal, tumor primario y metástasis hepática, apareada de dicha manera a nivel experimental, constituyendo así el número total de 54 muestras. El objeto "se" recoge a su vez la información de 39376 genes estudiados en estas 54 muestras. 
+La estructura inicial de nuestro objeto SummarizedExperiment ("se") recoge la información de 54 muestras de tejido de 18 pacientes con cáncer colorrectal. De cada paciente se recogió una muestra de tejido normal, tumor primario y metástasis hepática, apareada de dicha manera a nivel experimental, constituyendo así el número total de 54 muestras. El objeto "se" recoge a su vez la información de 39376 genes estudiados en estas 54 muestras. En el apartado assay (ensayos) nuestro objeto recoge los datos counts, logCPM, TPM y FKPM, a su vez el apartado colData presenta los dattos de 10 variables (geo_accession, sample_title, source_name, characteristics_1, characteristics_2, sample_name, patient_id, condition, sample_type, pair_group) y finalmente rowData presente los datos de 7 variables (gene_id, gene_symbol, description, gene_type, chromosome, map_location, entrez_id, has_entrez).
+```{r seleccion se_sub, include=FALSE}
+#plantamos la semilla con las ultimas 4 cifras del DNI
+#para seleccionar los pacientes
+myseed <- sum(utf8ToInt("6056"))
+set.seed(myseed)
+patients <- unique(se$patient_id)
+selected_patients <- sample(patients, 10)
+se_sub <- se[, se$patient_id %in% selected_patients]
+se_sub
+```
+```{r comprobacion se_sub, include=FALSE}
+#realizamos la comprobación del diseño apareado
+#y la selección de pacientes
+table(se_sub$patient_id, se_sub$condition)
+```
+# Subconjunto de datos analizados
+
+Para la realización del análisis de expresión génica se usó un subconjunto de datos del objeto original, constituido por 30 muestras de 10 pacientes manteniendo el diseño experimental apareado. 
+
+# Análisis exploratorio
+
+# Preprocesado de los datos
+
+# Modelo y diseño experimental
+
+# Expresión diferencial
+
+# Análisis de significación biológica (ORA)
+
+# Discusión y conclusiones
+
+# Apéndices
