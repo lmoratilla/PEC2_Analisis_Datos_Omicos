@@ -84,11 +84,16 @@ Para la realización del análisis de expresión génica se usó un subconjunto 
 
 # Análisis exploratorio
 
-El analisis exploratorio de la expresión génica (Figura 1)
+El analisis exploratorio de la expresión génica (Figura 1) mostró distribuciones de logCPM comparables entre todas las muestras en los boxplots que se situaron en rangos similares, lo que indica la ausencia de muestras atípicas. No se observaron tampaco diferencias sistemáticas entre los tres tipos de tejido estudiados (normal, primary_tumor y liver_metastasis) a nivel de distribución de expresión génica global, aunque las muestras de metástasis hepática muestra una leve variabilidad mas apreciable respecto al resto de muestras. 
 
-```{r figura-normalizacion, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
+```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
+#debemos crear un nuevo SummarizedExperiment para usar en vez de los 
+#datos crudos, los datos transformados logCPM y así
+#trabajar con POMA
+se_sub_log <- se_sub
+assay(se_sub_log, "counts") <- assay(se_sub, "logCPM")
 
-PomaBoxplots(se_sub, x = "samples", outcome = "condition")
+PomaBoxplots(se_sub_log, x = "samples", outcome = "condition")
 ```
 
 
