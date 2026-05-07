@@ -15,15 +15,33 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 if (!requireNamespace("SummarizedExperiment", quietly = TRUE))
     BiocManager::install("SummarizedExperiment")
-library(SummarizedExperiment)
 
 if (!requireNamespace("edgeR", quietly = TRUE))
     BiocManager::install("edgeR")
-library(edgeR)
 
 if (!requireNamespace("limma", quietly = TRUE))
     BiocManager::install("limma")
+
+if (!requireNamespace("POMA", quietly = TRUE))
+    BiocManager::install("POMA")
+
+if (!requireNamespace("FactoMineR", quietly = TRUE))
+    install.packages("FactoMineR")
+
+if (!requireNamespace("factoextra", quietly = TRUE))
+    install.packages("factoextra")
+
+if (!requireNamespace("umap", quietly = TRUE))
+    install.packages("umap")
+
+library(SummarizedExperiment)
+library(edgeR)
 library(limma)
+library(ggplot2)
+library(POMA)
+library(FactoMineR)
+library(factoextra)
+library(umap)
 ```
 ```{r carga datos, include=FALSE}
 #cargamos los datos desde el repositorio github
@@ -62,9 +80,18 @@ table(se_sub$patient_id, se_sub$condition)
 ```
 # Subconjunto de datos analizados
 
-Para la realización del análisis de expresión génica se usó un subconjunto de datos del objeto original, constituido por 30 muestras de 10 pacientes manteniendo el diseño experimental apareado. 
+Para la realización del análisis de expresión génica se usó un subconjunto de datos del objeto original, constituido por 30 muestras de 10 pacientes. Los pacientes seleccionados para este subconjunto de datos fueron: 12, 13, 19, 20, 21, 22, 3, 5, 7 y 8. Tras la selección se mantuvo la estructura de los datos apareados, teniendo cada paciente 1 muestra de cada tejido. 
 
 # Análisis exploratorio
+
+El analisis exploratorio de la expresión génica (Figura 1)
+
+```{r figura-normalizacion, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
+
+PomaBoxplots(se_sub, x = "samples", outcome = "condition")
+```
+
+
 
 # Preprocesado de los datos
 
