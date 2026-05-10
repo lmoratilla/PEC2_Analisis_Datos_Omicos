@@ -87,7 +87,7 @@ Para la realización del análisis de expresión génica se usó un subconjunto 
 
 El analisis exploratorio de la expresión génica (Figura 1) mostró distribuciones de logCPM comparables entre todas las muestras en los boxplots que se situaron en rangos similares, lo que indica la ausencia de muestras atípicas. No se observaron tampaco diferencias sistemáticas entre los tres tipos de tejido estudiados (normal, primary_tumor y liver_metastasis) a nivel de distribución de expresión génica global, aunque las muestras de metástasis hepática muestra una leve variabilidad mas apreciable respecto al resto de muestras. 
 
-```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
+```{r figura, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
 #debemos crear un nuevo SummarizedExperiment para usar en vez de los 
 #datos crudos, los datos transformados logCPM y así
 #trabajar con POMA
@@ -140,8 +140,8 @@ se_sub_filt <- se_sub[keep, ]
 #comprobamos que se haya aplicado correctamente
 dim(se_sub_filt)
 ```
-Previamente al filtrado nuestro objeto se_sub contaba con 39376 genes, sin embargo, tras la aplicación de los criterios expuestos se eliminaron 20993 genes, permaneciendo un total de 18393 genes para el análisis final. Esto eliminó el 53% de los genes iniciales con baja expresión que no aportarían información relevante al informe final. 
-Para la normalización de los datos se creó un objeto DGEList a partir de los datos filtrados. Se utilizó la función TMM para dicha normalización, usada para eliminar sesgos técnicos en datos de expresión RNA-seq. Este tipo de normalización es adecuada porque corrige las diferencias en la composición de las librerías entre muestras: genera un conjunto de factores de normalización, donde el producto de estos factores y los tamaños de librería definen el tamaño efectivo de la biblioteca. Para ello se utilizó la función calcNormFactors.
+Previamente al filtrado nuestro objeto se_sub contaba con 39376 genes, sin embargo, tras la aplicación de los criterios expuestos se eliminaron 20993 genes, permaneciendo un total de 18383 genes para el análisis final. Esto eliminó el 53% de los genes iniciales con baja expresión que no aportarían información relevante al informe final. 
+Para la normalización de los datos se creó un objeto DGEList a partir de los datos filtrados. Se utilizó la función TMM para dicha normalización, usada para eliminar sesgos técnicos en datos de expresión RNA-seq. Este tipo de normalización es adecuada porque corrige las diferencias en la composición de las librerías entre muestras: genera un conjunto de factores de normalización, donde el producto de estos factores y los tamaños de librería definen el tamaño efectivo de la biblioteca. Para ello se utilizó la función calcNormFactors. Los datos resultantes de la normalización se reflejan en la Figura 3. 
 ```{r preprocesado normalizacion, include=FALSE}
 #creamos el objeto DGEList a partir de los datos filtrados previamente
 #y agrupados por la variable condition
@@ -153,8 +153,46 @@ dgeObj$samples
 #aplicamos la normalizacion
 dgeObj_norm <- calcNormFactors(dgeObj, method = "TMM")
 ```
+```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 3. Expresión génica en función del tipo de muestra obtenida tras la normalización"}
+#obtenemos el logaritmo de los counts
+logcounts_norm <- cpm(dgeObj_norm,log=TRUE)
+#dibujamos el boxplot con los datos normalizados
+boxplot(logcounts_norm, ylab="Log2-CPM",las=2, xlab="", cex.axis=0.7, main="Boxplots of logCPMs (normalised)")
+# Let's add a blue horizontal line that corresponds to the median logCPM
+abline(h=median(logcounts_norm), col="blue")
+```
 
 # Modelo y diseño experimental
+
+El modelo y diseño experimental del estudio tomo nuestro objeto tras la filtración y normalización del mismo para la construcción del modelo experimental en forma ~patient_id+condition
+```{r modelo experimental, include=FALSE}
+#seleccionamos unicamente las muestras normal y primary tumor
+#de nuestro objeto filtrado previamente
+se_pn <- se_sub_filt[, se_sub_filt$condition %in% c("normal", "primary_tumor")]
+se_pn$condition <- droplevels(se_pn$condition)
+se_pn$patient_id <- factor(se_pn$patient_id)
+#comprobamos la dimensionalidad del objeto
+dim(se_pn)
+table(se_pn$condition)
+#creamos otro objeto DGEList para la normalización de este subset
+dge_pn <- DGEList(counts = assay(se_pn, "counts"),
+                  group = se_pn$condition)
+#aplicamos normalización TMM
+dge_pn <- calcNormFactors(dge_pn, method = "TMM")
+```
+Tras la configuración inicial según el modelo descrito previamente, la matriz de diseño es la siguiente:
+```{r matriz de diseño, include=TRUE, echo=FALSE}
+#definimos los factores
+group <- paste(se_pn$patient_id, se_pn$condition, sep = ".")
+#construimos la matriz de diseño con patient_id y condition
+design <- model.matrix(~ patient_id + condition, data = colData(se_pn))
+colnames(design) <- gsub("patient_id", "", colnames(design))
+rownames(design) <- colnames(se_pn)
+design
+```
+Dentro de esta matriz de diseño el término patient_id en la matriz de diseño genera una columna por cada paciente (excepto el de referencia, que en este caso es AMC_12). Cada columna indica con un 1 qué muestras pertenecen a ese paciente. De esta forma, el modelo puede estimar cuánto se desvía la expresión génica de cada paciente respecto al paciente de referencia (AMC_12),descontando esa diferencia antes de comparar tumor primario vs normal. Esto permite asegurar que las diferencias que encontremos sean debidas a la condición y no a la variabilidad de la expresión génica entre individuos.
+
+Es importante remarcar que el estudio de las muestras no puede tratarse de manera independiente al ser un diseño apareado, ya que las muestras de cada paciente tienen correlación entre sí, ya que la expresión génica de un paciente a otro podría tener variabilidad debido a multiplicidad de factores relacionados con el propio individuo. Si tratasemos las muestras de manera independiente, ignoraríamos la presencia la propia variabilidad individual produciendo un sesgo al análisis final, reduciendo la potencia estadística para detectar genes diferencialmente expresados. 
 
 # Expresión diferencial
 
