@@ -141,7 +141,7 @@ se_sub_filt <- se_sub[keep, ]
 dim(se_sub_filt)
 ```
 Previamente al filtrado nuestro objeto se_sub contaba con 39376 genes, sin embargo, tras la aplicación de los criterios expuestos se eliminaron 20993 genes, permaneciendo un total de 18393 genes para el análisis final. Esto eliminó el 53% de los genes iniciales con baja expresión que no aportarían información relevante al informe final. 
-Para la normalización de los datos se creó un objeto DGEList a partir de los datos filtrados. Se utilizó la función TMM para dicha normalización, usada para eliminar sesgos técnicos en datos de expresión RNA-seq. Este tipo de normalización es adecuada porque corrige las diferencias en la composición de las librerías entre muestras: genera un conjunto de factores de normalización, donde el producto de estos factores y los tamaños de librería definen el tamaño efectivo de la biblioteca. Para ello se utilizó la función calcNormFactors
+Para la normalización de los datos se creó un objeto DGEList a partir de los datos filtrados. Se utilizó la función TMM para dicha normalización, usada para eliminar sesgos técnicos en datos de expresión RNA-seq. Este tipo de normalización es adecuada porque corrige las diferencias en la composición de las librerías entre muestras: genera un conjunto de factores de normalización, donde el producto de estos factores y los tamaños de librería definen el tamaño efectivo de la biblioteca. Para ello se utilizó la función calcNormFactors.
 ```{r preprocesado normalizacion, include=FALSE}
 #creamos el objeto DGEList a partir de los datos filtrados previamente
 #y agrupados por la variable condition
