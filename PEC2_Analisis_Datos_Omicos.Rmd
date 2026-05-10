@@ -98,20 +98,21 @@ PomaBoxplots(se_sub_log, x = "samples", outcome = "condition")
 ```
 Se realizó un análisis de componentes principales (PCA) cuyos resultados se muestran en la Figura 2. Las dos primeras componentes explican el 33,1% de la varianza total (PC1: 17,6%, PC2: 15,5%). Se observa una separación parcial por condición (Figura 2B) donde las muestras de tejido normal forman un grupo compacto y bien diferenciado, mientras que las muestras de tumor primario y metástasis hepática tienden a dispersarse hacia valores negativos en PC1. No obstante, las elipses de las tres condiciones se solapan considerablemente, lo que sugiere que existe variabilidad adicional no capturada por las dos primeras componentes. El gráfico por paciente (Figura 2C) muestra un efecto de paciente leve: las muestras del mismo paciente no siempre se agrupan entre sí, lo que indica que la condición explica parte de la variabilidad. Destaca el paciente AMC_19, cuya muestra de metástasis hepática se encuentra claramente alejada del resto, siendo la muestra más atípica del conjunto.
 ```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 2. PCA exploratorio"}
+#trasponemos la matriz para hacer PCA
 se_sub_t <- t(assay(se_sub_log))
+#hacemos PCA
 pca <- PCA(se_sub_t, ncp = 5, graph = FALSE)
-
-# PCA individuos
+# Realizamos el grafico de PCA individuos
 ind <- fviz_pca_ind(pca, repel = TRUE, label="none") +
   labs(title = "A. Individuos")
 
-# PCA coloreado por condition
+# Graficamos PCA coloreado por condition
 ind_condition <- fviz_pca_ind(pca,label = "none",
                                col.ind = se_sub_log$condition,
                                addEllipses = TRUE,
                                legend.title = "Condición") +
                                labs(title = "B. Condición")
-#PCA por paciente 
+#Graficamos PCA por paciente 
 
 ind_patient <- fviz_pca_ind(pca,label = "none",
                               col.ind = se_sub$patient_id,
@@ -120,10 +121,38 @@ ind_patient <- fviz_pca_ind(pca,label = "none",
 
 (ind / ind_condition) | ind_patient
 ```
-
-
-
 # Preprocesado de los datos
+
+Se realizó un preprocesado de los datos previamente identificando aquellos genes cuya expresión fuera CPM >1 en al menos 5 muestras, los cuáles formarán parte del análisis final. A su vez posteriormente se procedió a la normalización de los datos de la expresión de RNA-seq tras el filtrado. 
+```{r preprocesado filtrado, include=FALSE}
+#extraemos la matriz de counts
+counts_matrix <- assay(se_sub, "counts")
+#calculamos CPM con la función cpm() de edgeR
+cpm_matrix <- cpm(counts_matrix)
+#seleccionamos los genes con cpm > 1 en al menos 5 muestras
+thresh <- cpm_matrix > 1
+keep <- rowSums(thresh) >= 5
+#comparamos antes y después
+dim(counts_matrix)
+dim(counts_matrix[keep, ])
+#aplicamos el filtro al objeto SummarizedExperiment
+se_sub_filt <- se_sub[keep, ]
+#comprobamos que se haya aplicado correctamente
+dim(se_sub_filt)
+```
+Previamente al filtrado nuestro objeto se_sub contaba con 39376 genes, sin embargo, tras la aplicación de los criterios expuestos se eliminaron 20993 genes, permaneciendo un total de 18393 genes para el análisis final. Esto eliminó el 53% de los genes iniciales con baja expresión que no aportarían información relevante al informe final. 
+Para la normalización de los datos se creó un objeto DGEList a partir de los datos filtrados. Se utilizó la función TMM para dicha normalización, usada para eliminar sesgos técnicos en datos de expresión RNA-seq. Este tipo de normalización es adecuada porque corrige las diferencias en la composición de las librerías entre muestras: genera un conjunto de factores de normalización, donde el producto de estos factores y los tamaños de librería definen el tamaño efectivo de la biblioteca. Para ello se utilizó la función calcNormFactors
+```{r preprocesado normalizacion, include=FALSE}
+#creamos el objeto DGEList a partir de los datos filtrados previamente
+#y agrupados por la variable condition
+dgeObj <- DGEList(counts = assay(se_sub_filt, "counts"), group = se_sub_filt$condition)
+#comprobamos que contiene dgeObj
+names(dgeObj)
+#asi como su contenido samples
+dgeObj$samples
+#aplicamos la normalizacion
+dgeObj_norm <- calcNormFactors(dgeObj, method = "TMM")
+```
 
 # Modelo y diseño experimental
 
