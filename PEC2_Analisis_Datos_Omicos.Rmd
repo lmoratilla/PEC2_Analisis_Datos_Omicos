@@ -190,11 +190,32 @@ colnames(design) <- gsub("patient_id", "", colnames(design))
 rownames(design) <- colnames(se_pn)
 design
 ```
+Y la matriz de contrastes: 
+```{r matriz contrastes, include=TRUE, echo=FALSE}
+cont.matrix <- makeContrasts(primary_vs_normal = conditionprimary_tumor,levels = design)
+
+cont.matrix
+```
 Dentro de esta matriz de diseño el término patient_id en la matriz de diseño genera una columna por cada paciente (excepto el de referencia, que en este caso es AMC_12). Cada columna indica con un 1 qué muestras pertenecen a ese paciente. De esta forma, el modelo puede estimar cuánto se desvía la expresión génica de cada paciente respecto al paciente de referencia (AMC_12),descontando esa diferencia antes de comparar tumor primario vs normal. Esto permite asegurar que las diferencias que encontremos sean debidas a la condición y no a la variabilidad de la expresión génica entre individuos.
 
 Es importante remarcar que el estudio de las muestras no puede tratarse de manera independiente al ser un diseño apareado, ya que las muestras de cada paciente tienen correlación entre sí, ya que la expresión génica de un paciente a otro podría tener variabilidad debido a multiplicidad de factores relacionados con el propio individuo. Si tratasemos las muestras de manera independiente, ignoraríamos la presencia la propia variabilidad individual produciendo un sesgo al análisis final, reduciendo la potencia estadística para detectar genes diferencialmente expresados. 
 
 # Expresión diferencial
+
+```{r transformacion datos, include=FALSE}
+#transformamos el objeto DGEList con voom
+#para poder analizarlo con limma
+voomObj <- voom(dge_pn, design)
+```
+```{r genes diferenciales, include=FALSE}
+#ajustamos el modelo lineal
+fit <- lmFit(voomObj)
+#aplicamos la matriz de contrastes
+fit.cont <- contrasts.fit(fit, cont.matrix)
+#regularizamos la estimación del error con eBayes
+fit.cont <- eBayes(fit.cont)
+```
+
 
 # Análisis de significación biológica (ORA)
 
