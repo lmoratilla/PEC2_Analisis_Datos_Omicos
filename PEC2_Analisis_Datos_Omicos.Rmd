@@ -215,6 +215,22 @@ fit.cont <- contrasts.fit(fit, cont.matrix)
 #regularizamos la estimación del error con eBayes
 fit.cont <- eBayes(fit.cont)
 ```
+El análisis de genes diferencialmente expresados se llevó a cabo con el análisis lineal de la matriz de contrastes. Se filtraron aquellos genes cuyó p valor estaba por debajo del nivel de significancia 0.05 y cuyo |logFC| era >2. 
+```{r decidetest, include=FALSE}
+#con decideTests aplicamos los criterios 
+summa.fit <- decideTests(fit.cont, p.value = 0.05, lfc = 2)
+summary(summa.fit)
+```
+Se obtuvieron un total de 720 genes diferencialmente expresados: 325 genes sobreexpresados y 395 infraexpresados.  Para la identificación de la identificación de los genes más relevantes se procedió a usar la notación 
+```{r toptable, include=FALSE}
+#extraemos todos los resultados con topTable
+results <- topTable(fit.cont, coef = "primary_vs_normal",number = nrow(fit.cont))
+```
+```{r rowData}
+#debemos cambiar ahora la notacion de genes 
+#exploramos rowData para ver que notaciones tenemos disponibles 
+colnames(rowData(se_pn))
+```
 
 
 # Análisis de significación biológica (ORA)
