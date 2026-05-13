@@ -230,14 +230,22 @@ El análisis de genes diferencialmente expresados se llevó a cabo con el análi
 summa.fit <- decideTests(fit.cont, p.value = 0.05, lfc = 2)
 summary(summa.fit)
 ```
-Se obtuvieron un total de 720 genes diferencialmente expresados: 325 genes sobreexpresados y 395 infraexpresados. Entre dichos genes los 10 que tuvieron mayor expresión diferencial figuran en la Tabla 1. 
+En total se identificaron 720 genes diferencialmente expresados, de los cuales 325 están sobreexpresados y 395 infraexpresados en tumor primario respecto a tejido normal. Los genes que obtuvieron una mayor expresión diferencial figuran en la Tabla 1. El gen más significativo fue el 144501, con un logFC de 5.63 y un FDR de 0.00135.
+El resumen del análisis de expresión diferencial se muestra en la Figura 4. En el volcano plot se representan todos los genes analizados, destacando en azul los 10 genes más significativos. Las líneas discontinuas marcan los umbrales establecidos: |log2FC| > 2 (líneas verticales rojas) y FDR < 0.05 (línea horizontal azul).
 ```{r toptable, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 1. Top 10 genes diferencialmente expresados ordenados por FDR (primary_tumor vs normal)"}
 #extraemos todos los resultados con topTable
 results <- topTable(fit.cont, coef = "primary_vs_normal",number = nrow(fit.cont))
 head(results, 10)
 ```
 
-
+```{r volcanoplot, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 4. Volcano plot"}
+volcanoplot(fit.cont,coef = "primary_vs_normal",highlight = 10,
+            names = rownames(fit.cont))
+# Líneas de los umbrales
+abline(v = c(-2, 2), col = "red", lty = 2)
+abline(h = -log10(0.05), col = "blue", lty = 2)
+```
+Al analizar la proporción de genes infra y sobreexpresados objetivamos una mayor cantidad de genes infraexpresados, esto podría sugerir que la transformación tumoral en el cáncer colorrectal se asocia en mayor medida a una pérdida de la expresión génica respecto al tejido normal, con una posible relación en el silenciamiento de genes supresores de tumores. Este análisis será explroado en mayor profundida en el análisis de significicación biológica. 
 
 # Análisis de significación biológica (ORA)
 
