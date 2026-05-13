@@ -34,6 +34,13 @@ if (!requireNamespace("factoextra", quietly = TRUE))
 if (!requireNamespace("umap", quietly = TRUE))
     install.packages("umap")
 
+if (!requireNamespace("clusterProfiler", quietly = TRUE))
+    BiocManager::install("clusterProfiler")
+
+if (!requireNamespace("org.Hs.eg.db", quietly = TRUE))
+    BiocManager::install("org.Hs.eg.db")
+
+
 library(SummarizedExperiment)
 library(edgeR)
 library(limma)
@@ -43,6 +50,8 @@ library(FactoMineR)
 library(factoextra)
 library(umap)
 library(patchwork)
+library(clusterProfiler)
+library(org.Hs.eg.db)
 ```
 ```{r carga datos, include=FALSE}
 #cargamos los datos desde el repositorio github
@@ -221,19 +230,23 @@ El análisis de genes diferencialmente expresados se llevó a cabo con el análi
 summa.fit <- decideTests(fit.cont, p.value = 0.05, lfc = 2)
 summary(summa.fit)
 ```
-Se obtuvieron un total de 720 genes diferencialmente expresados: 325 genes sobreexpresados y 395 infraexpresados.  Para la identificación de la identificación de los genes más relevantes se procedió a usar la notación 
-```{r toptable, include=FALSE}
+Se obtuvieron un total de 720 genes diferencialmente expresados: 325 genes sobreexpresados y 395 infraexpresados. Entre dichos genes los 10 que tuvieron mayor expresión diferencial figuran en la Tabla 1. 
+```{r toptable, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 1. Top 10 genes diferencialmente expresados ordenados por FDR (primary_tumor vs normal)"}
 #extraemos todos los resultados con topTable
 results <- topTable(fit.cont, coef = "primary_vs_normal",number = nrow(fit.cont))
+head(results, 10)
 ```
-```{r rowData}
-#debemos cambiar ahora la notacion de genes 
-#exploramos rowData para ver que notaciones tenemos disponibles 
-colnames(rowData(se_pn))
-```
+
 
 
 # Análisis de significación biológica (ORA)
+
+```{r rowData, include=FALSE}
+#exploramos rowData para ver que notaciones tenemos disponibles 
+colnames(rowData(se_pn))
+head(rowData(se_pn))
+```
+Para la notación de genes usaremos gene_symbol para su identificación en tablas debido a que constituye el nombre oficial del gen y por tanto visualmente es más facilmente identificable.Para el análisis de enriquecimiento se usará entrez_id ya que enrichGO utilizá este tipo de notación. Puede usarse a su vez gene_id ya que coincide con entrez_id en nuestro caso. 
 
 # Discusión y conclusiones
 
