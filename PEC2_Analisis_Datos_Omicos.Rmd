@@ -254,7 +254,37 @@ Al analizar la proporción de genes infra y sobreexpresados objetivamos una mayo
 colnames(rowData(se_pn))
 head(rowData(se_pn))
 ```
-Para la notación de genes usaremos gene_symbol para su identificación en tablas debido a que constituye el nombre oficial del gen y por tanto visualmente es más facilmente identificable.Para el análisis de enriquecimiento se usará entrez_id ya que enrichGO utilizá este tipo de notación. Puede usarse a su vez gene_id ya que coincide con entrez_id en nuestro caso. 
+```{r anotacion correcta, include=FALSE}
+#convertimos rowdata en un dataframe para la extraccion correcta de entrez_id y has_entrez
+rowdata <- as.data.frame(rowData(se_pn))
+#extraemos los ids del objeto summafit que son diferentes de 0
+deg <- rownames(summa.fit)[summa.fit[, "primary_vs_normal"] != 0]
+#realizamos una tabal TRUE/FALSE para comprobar los ids que tienen entrez
+table(rowdata$has_entrez[rowdata$gene_id %in% deg])
+```
+Para el análisis de enriquecimiento se usará entrez_id ya que enrichGO utilizá este tipo de notación. Puede usarse a su vez gene_id ya que coincide con entrez_id en nuestro caso. Entre los genes diferencialmente expresados y seleccionados con los criterios impuestos previamente encontramos que todos cuentan con un entrez_id válido, sin necesidad de eliminar ninguno para el análisis. 
+```{r sobrerepresentacion, include=FALSE}
+#desde el objeto topTable "results" vamos a seleccionar los genes 
+#sobreexpresados que cumplen los criterios
+#seleccionamos los nombres de las filas
+allEntrezs <- rownames(results)
+#establecemos los criterios de subset
+selectedEntrezsUP <- rownames(subset(results, (logFC>2) & (adj.P.Val < 0.05)))
+#comprobamos la seleccion correcta
+length(selectedEntrezsUP)
+```
+```{r enrichGO}
+ego <- enrichGO(gene = selectedEntrezsUP, 
+                universe = allEntrezs,
+                keyType = "ENTREZID",
+                OrgDb = org.Hs.eg.db, 
+                ont = "BP", 
+                pAdjustMethod = "BH", 
+                qvalueCutoff = 0.05, 
+                readable = TRUE)
+head(ego)
+```
+
 
 # Discusión y conclusiones
 
