@@ -273,18 +273,24 @@ selectedEntrezsUP <- rownames(subset(results, (logFC>2) & (adj.P.Val < 0.05)))
 #comprobamos la seleccion correcta
 length(selectedEntrezsUP)
 ```
-```{r enrichGO}
+```{r enrichGO, include=FALSE}
+#realizamos el analisis con enrichGO
 ego <- enrichGO(gene = selectedEntrezsUP, 
                 universe = allEntrezs,
                 keyType = "ENTREZID",
+                #tomamos la base de datos del humano
                 OrgDb = org.Hs.eg.db, 
+                #tomamos con ontologia el Biological Process
                 ont = "BP", 
+                #ajustamos las comparaciones multiples
                 pAdjustMethod = "BH", 
                 qvalueCutoff = 0.05, 
                 readable = TRUE)
 head(ego)
+#vemos cuantos terminos GO-BP han salido significativos
+nrow(ego)
 ```
-
+El análisis de sobrerepresentación incluyo un total de 325 genes sobrexpresados con un total de 87 términos GO-BP significativos
 
 # Discusión y conclusiones
 
