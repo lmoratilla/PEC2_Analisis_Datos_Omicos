@@ -298,12 +298,18 @@ top_go <- as.data.frame(ego)[1:10, c("Description", "GeneRatio", "p.adjust", "Co
 top_go
 ```
 
-Así mismo podemos observar en la Figura 5 el gráfico dotplot estos mismos resultados. 
+Entre los 87 términos GO-BP significativos sobreexpresados en el tejido tumoral primario frente al normal, podemos objetivar que los más enriquecidos se organizan en torno a 3 procesos (Figura 5) que son: remodelación y estructuración de la matriz extracelular, diferanciación de células epiteliales y metabolismo del colágeno. 
+
+En cuanto al primero (extracellular matrix organization, extracellular structure organization, external encapsulating structure organization, extracellular matrix disassembly) presenta los gene ratio más elevados (0,10). Esta alteración de las rutas transcripcionales en la remodelación y organización de la matriz extracelular esta en línea con lo esperable en el cáncer colorrectal, donde la alteración de estos procesos celulares favorece la invasión y la presencia de metástasis a distancia. 
+
+Otro proceso en línea con el anterior es la alteración de los procesos relacionados con el metabolismo del colágeno. Esta alteración permite favorecer la invasión tumoral a través de la activación de genes relacionados con metaloproteasas, que degradan el colageno circundante y la matriz extracelular, así como la activación de genes de síntesis del colágeno para dar soporte al nuevo estroma tumoral. 
+
+Finalmente dentro de los mecanismos del desarrollo del cáncer colorrectal también cobraría importación la alteración de la diferenciación epitelial debido a la transformación celular del epitelio propio de la mucosa intestinal en línea con la transformación maligna celular. 
+
 
 ```{r include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 5. Dotplot. ORA: Genes sobreexpresados en tumor primario"}
 dotplot(ego, showCategory = 10, font.size=6)
 ```
-
 # Discusión y conclusiones
 
 # Apéndices
