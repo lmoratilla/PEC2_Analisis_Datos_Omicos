@@ -291,7 +291,7 @@ head(ego)
 nrow(ego)
 ```
 El análisis de sobrerepresentación incluyo un total de 325 genes sobrexpresados con un total de 87 términos GO-BP significativos entre los que encontramos los siguientes 10 mas relevantes, según se refleja en la Tabla 2.
-```{r tabla2, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 2. Top 10 genes sobrerepresentados con sobreexpresión"}
+```{r tabla2, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 2. Top 10 términos GO sobrerepresentados con sobreexpresión"}
 #realizamos la tabla convirtiendo a dataframe ego y añadimos las categorías 
 #que queremos que aparezcan
 top_go <- as.data.frame(ego)[1:10, c("Description", "GeneRatio", "p.adjust", "Count")]
@@ -300,16 +300,59 @@ top_go
 
 Entre los 87 términos GO-BP significativos sobreexpresados en el tejido tumoral primario frente al normal, podemos objetivar que los más enriquecidos se organizan en torno a 3 procesos (Figura 5) que son: remodelación y estructuración de la matriz extracelular, diferanciación de células epiteliales y metabolismo del colágeno. 
 
-En cuanto al primero (extracellular matrix organization, extracellular structure organization, external encapsulating structure organization, extracellular matrix disassembly) presenta los gene ratio más elevados (0,10). Esta alteración de las rutas transcripcionales en la remodelación y organización de la matriz extracelular esta en línea con lo esperable en el cáncer colorrectal, donde la alteración de estos procesos celulares favorece la invasión y la presencia de metástasis a distancia. 
+En cuanto al primero (extracellular matrix organization, extracellular structure organization, external encapsulating structure organization, extracellular matrix disassembly) presenta los gene ratio más elevados (0,10), lo que indica que 23 de los 229 genes sobreexpresados con anotación GO estan implicados en estos procesos. Esta alteración de las rutas transcripcionales en la remodelación y organización de la matriz extracelular esta en línea con lo esperable en el cáncer colorrectal, donde la alteración de estos procesos celulares favorece la invasión y la presencia de metástasis a distancia. 
 
 Otro proceso en línea con el anterior es la alteración de los procesos relacionados con el metabolismo del colágeno. Esta alteración permite favorecer la invasión tumoral a través de la activación de genes relacionados con metaloproteasas, que degradan el colageno circundante y la matriz extracelular, así como la activación de genes de síntesis del colágeno para dar soporte al nuevo estroma tumoral. 
 
 Finalmente dentro de los mecanismos del desarrollo del cáncer colorrectal también cobraría importación la alteración de la diferenciación epitelial debido a la transformación celular del epitelio propio de la mucosa intestinal en línea con la transformación maligna celular. 
 
 
-```{r include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 5. Dotplot. ORA: Genes sobreexpresados en tumor primario"}
+```{r dotplot include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 5. Dotplot. ORA: Genes sobreexpresados en tumor primario"}
 dotplot(ego, showCategory = 10, font.size=6)
 ```
+## ORA de genes infraexpresados en tumor y comparación con ORA de genes sobreexpresados
+
+```{r infraexpresados, include=FALSE}
+#establecemos los criterios de subset de infraexpresados
+selectedEntrezsDOWN <- rownames(subset(results, (logFC < -2) & (adj.P.Val < 0.05)))
+length(selectedEntrezsDOWN)
+```
+```{r enrichGO down, include=FALSE}
+#realizamos el analisis con enrichGO para genes infraexpresados
+egodown <- enrichGO(gene = selectedEntrezsDOWN, 
+                universe = allEntrezs,
+                keyType = "ENTREZID",
+                #tomamos la base de datos del humano
+                OrgDb = org.Hs.eg.db, 
+                #tomamos con ontologia el Biological Process
+                ont = "BP", 
+                #ajustamos las comparaciones multiples
+                pAdjustMethod = "BH", 
+                qvalueCutoff = 0.05, 
+                readable = TRUE)
+head(egodown)
+#vemos cuantos terminos GO-BP han salido significativos
+nrow(egodown)
+```
+El análisis de sobrerepresentación incluyo un total de 395 genes sobrexpresados con un total de 14 términos GO-BP significativos entre los que encontramos los siguientes, según se refleja en la Tabla 3.
+
+```{r tabla3, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 3. Top 10 términos GO sobrerepresentados con infraexpresión"}
+#realizamos la tabla convirtiendo a dataframe ego y añadimos las categorías 
+#que queremos que aparezcan
+top_godown <- as.data.frame(egodown)[1:10, c("Description", "GeneRatio", "p.adjust", "Count")]
+top_godown
+```
+Si comparamos los resultados con los genes sobreexpresados en el tejido tumoral (87 términos GO-BP), los genes infraexpresados presentan únicamente 14 términos GO-BP significativos, pero con GeneRatios más elevados (0.15-0.18), mayor significación estadística y un mayor número de genes por término (Figura 6).
+
+Los términos enriquecidos giran en torno a la función inmune: leukocyte mediated immunity, lymphocyte mediated immunity, B cell mediated immunity e immunoglobulin mediated immune response, entre otros. Este silenciamiento de genes relacionados con la respuesta inmune cobra especial sentido biológico si consideramos los mecanismos de eliminación tumoral: las células tumorales presentan antígenos en su superficie a través del MHC-I, que son reconocidos por linfocitos T CD8+ citotóxicos para su eliminación. La pérdida de expresión de genes implicados en estos procesos representa por tanto un mecanismo de evasión inmune tumoral, que permitiría a las células tumorales escapar de la vigilancia inmunológica y progresar.
+
+```{r dotplotdown include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 6. Dotplot. ORA: Genes infraexpresados en tumor primario"}
+dotplot(egodown, showCategory = 10, font.size=6)
+```
+La comparación entre ambos análisis de sobrerrepresentación revela perfiles biológicos diferenciados. Los genes sobreexpresados en el tumor primario se asocian principalmente a procesos de remodelación de la matriz extracelular y metabolismo del colágeno, reflejando la activación de mecanismos de invasión tumoral. Por el contrario, los genes infraexpresados se asocian a procesos de respuesta inmune, constituyendo un mecanismo de evasión inmune tumoral que permite la progresión e invasión del tumor.
+
+En conjunto, estos resultados son coherentes con el mecanismo tumoral en cáncer colorrectal en el que el tumor activa simultáneamente mecanismos de invasión tisular (sobreexpresión de genes de remodelación de matriz) y de evasión inmune (infraexpresión de genes de respuesta inmune), dos eventos clave en la transformación maligna y la progresión hacia estadios avanzados.
+
 # Discusión y conclusiones
 
 # Apéndices
