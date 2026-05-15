@@ -290,7 +290,19 @@ head(ego)
 #vemos cuantos terminos GO-BP han salido significativos
 nrow(ego)
 ```
-El análisis de sobrerepresentación incluyo un total de 325 genes sobrexpresados con un total de 87 términos GO-BP significativos
+El análisis de sobrerepresentación incluyo un total de 325 genes sobrexpresados con un total de 87 términos GO-BP significativos entre los que encontramos los siguientes 10 mas relevantes, según se refleja en la Tabla 2.
+```{r tabla2, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 2. Top 10 genes sobrerepresentados con sobreexpresión"}
+#realizamos la tabla convirtiendo a dataframe ego y añadimos las categorías 
+#que queremos que aparezcan
+top_go <- as.data.frame(ego)[1:10, c("Description", "GeneRatio", "p.adjust", "Count")]
+top_go
+```
+
+Así mismo podemos observar en la Figura 5 el gráfico dotplot estos mismos resultados. 
+
+```{r include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 5. Dotplot. ORA: Genes sobreexpresados en tumor primario"}
+dotplot(ego, showCategory = 10, font.size=6)
+```
 
 # Discusión y conclusiones
 
