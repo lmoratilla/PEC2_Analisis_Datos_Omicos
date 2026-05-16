@@ -6,7 +6,11 @@ output: html_document
 ---
 # Introducción
 
+El análisis de datos ómicos mediante RNA-seq representa una de las herramientas más potentes en la actualidad, permitiendo caracterizar de forma global el perfil de expresión génica de un tejido. Su aplicación en el estudio del cáncer ha permitido identificar genes y rutas transcripcionales implicadas en la transformación maligna, progresión tumoral y la investigación de nuevas dianas terapéuticas.
 
+Para el correcto análisis de los datos RNA-seq es necesario realizar una serie de pasos metodólogicos para garantizar la adecuada calidad del mismo. El uso de objetos SummarizedExperiment integrados en el paquete Bioconductor junto con las librerías limma, edgeR o clusterProfiles permite que la complejidad de estos procesos se organice de manera más estructurada. Estos objetos integran los datos de expresión génica junto con sus metadatos, facilitando el análisis exploratorio y preprocesado de los datos, pasos indispensables antes del análisis de expresión diferencial. El entorno de Bioconductor a su vez permite obtener los genes diferencialmente expresados entre tejidos así como la realización de un análisis de sobrerepresentación que permita explicar la significacia biológica de los resultados. 
+
+En este ejercicio se realizará un análisis de expresión diferencial a partir de datos de RNA-seq del estudio GSE50760. Este estudio contiene datos de cáncer colorrectal con un diseño apareado, donde encontramos 3 muestras de tejido por paciente (normal, primary_tumor y liver_metastasis). El objetivo principal será identificar genes diferencialmente expresados entre tumor primario y tejido normal así como explorar su significación biológica mediante análisis de sobrerrepresentación. 
 
 # Descripción de los datos 
 ```{r instalacion paquetes, include=FALSE, message=FALSE}
@@ -353,6 +357,19 @@ La comparación entre ambos análisis de sobrerrepresentación revela perfiles b
 
 En conjunto, estos resultados son coherentes con el mecanismo tumoral en cáncer colorrectal en el que el tumor activa simultáneamente mecanismos de invasión tisular (sobreexpresión de genes de remodelación de matriz) y de evasión inmune (infraexpresión de genes de respuesta inmune), dos eventos clave en la transformación maligna y la progresión hacia estadios avanzados.
 
-# Discusión y conclusiones
+# Discusión
+
+El análisis de expresión diferencial basado en datos de RNA-seq del estudio GSE50760 ha permitido identificar alteraciones transcriptómicas relevantes en el cáncer colorrectal primario respecto al tejido colónico normal donde la sobreexpresión de rutas relacionadas con la remodelación de la matriz extracelular, el metabolismo del colágeno y la alteración de la diferenciación epitelial, así como la infraexpresión de genes relacionados con la respuesta inmune, parecen jugar un papel relevante en el desarrollo y progresión en este tipo de tumores.
+
+El análisis exploratorio inicial sobre la totalidad de los genes identificados (39376 genes) mostró una separación entre muestras tumorales y normales en el análisis de componente principales, lo que sugiere la existencia de un perfil transcripcional diferenciado entre ambos tejidos. Tras el preprocesado de los datos y eliminación de aquellos genes cuyo perfil de expresión se encontraba por debajo de CPM < 1, el análisis de expresión diferencial (FDR <0,05 y |log2FC| >2) identificó 720 genes diferencialmente expresados, 325 sobreexpresados y 395 infraexpresados en el tejido tumoral primario. La significación biológica de estos genes cobra especial relevancia a la hora de analizarlos por separados. La sobreexpresión de genes relacionados con mecanismos de remodelación del ambiente celular permitiría a las células del tumor aumentar la capacidad de invasión tisular y crecimiento tumoral favorecido por la creación de este microambiente específico. Por otro lado, la infraexpresión de genes relacionados con la respuesta inmune tumoral, es si cabe, aún mas relevante con el silenciamiento de este tipo de genes como mecanismo de escape a la respuesta del individuo frente a este tipo de células, permitiendo la progresión tumoral. 
+
+Este estudio presenta fortalezas y limitaciones que debemos remarcar. Entre las primeras destaca el diseño apareado, que al comparar cada paciente consigo mismo elimina la variabilidad interindividual a la hora del análisis transcripcional. Como principal limitación, el tamaño muestral reducido (10 pacientes) puede comprometer la potencia estadística y la generalización de los resultados hacia la población general. 
+
+# Conclusión 
+
+El análisis transcriptómico del cáncer colorrectal primario ha permitido identificar varios mecanismos moleculares clave en el desarrollo tumoral: la activación de procesos de remodelación de la matriz extracelular y del metabolismo del colágeno, favoreciendo la invasión tisular, y la supresión de la respuesta inmune adaptativa como mecanismo de evasión tumoral. Ambos hallazgos son coherentes con los mecanismos de progresión descritos en la literatura para el cáncer colorrectal y constituyen potenciales dianas terapéuticas de interés para futuras investigaciones. 
 
 # Apéndices
+
+```{r apendice, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE, include=TRUE}
+```
