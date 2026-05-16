@@ -1,10 +1,21 @@
 ---
-title: "PEC2_Lucas_Moratilla"
+title: "PEC2 - Análisis de Datos Ómicos"
 author: "Lucas Moratilla Lapeña"
 date: "2026-05-05"
 output:
-  pdf_document: default
-  html_document: default
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    latex_engine: xelatex
+  html_document:
+    toc: true
+    toc_depth: 3
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \usepackage{caption}
+geometry: "margin=2.5cm"
+fontsize: 10.5pt
 ---
 # Introducción
 
@@ -16,6 +27,9 @@ En este ejercicio se realizará un análisis de expresión diferencial a partir 
 
 # Descripción de los datos 
 ```{r instalacion paquetes, include=FALSE, message=FALSE}
+if (!requireNamespace("knitr", quietly = TRUE))
+    install.packages("knitr")
+
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
@@ -46,7 +60,7 @@ if (!requireNamespace("clusterProfiler", quietly = TRUE))
 if (!requireNamespace("org.Hs.eg.db", quietly = TRUE))
     BiocManager::install("org.Hs.eg.db")
 
-
+library(knitr)
 library(SummarizedExperiment)
 library(edgeR)
 library(limma)
@@ -58,6 +72,8 @@ library(umap)
 library(patchwork)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+
+knitr::opts_chunk$set(fig.width = 7, fig.height = 5)
 ```
 ```{r carga datos, include=FALSE}
 #cargamos los datos desde el repositorio github
@@ -102,7 +118,7 @@ Para la realización del análisis de expresión génica se usó un subconjunto 
 
 El analisis exploratorio de la expresión génica (Figura 1) mostró distribuciones de logCPM comparables entre todas las muestras en los boxplots que se situaron en rangos similares, lo que indica la ausencia de muestras atípicas. No se observaron tampaco diferencias sistemáticas entre los tres tipos de tejido estudiados (normal, primary_tumor y liver_metastasis) a nivel de distribución de expresión génica global, aunque las muestras de metástasis hepática muestra una leve variabilidad mas apreciable respecto al resto de muestras. 
 
-```{r figura, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 1. Expresión génica en función del tipo de muestra obtenida"}
+```{r figura, include=TRUE, echo=FALSE, warning=FALSE, fig.cap="Expresión génica en función del tipo de muestra obtenida"}
 #debemos crear un nuevo SummarizedExperiment para usar en vez de los 
 #datos crudos, los datos transformados logCPM y así
 #trabajar con POMA
@@ -112,7 +128,7 @@ assay(se_sub_log, "counts") <- assay(se_sub, "logCPM")
 PomaBoxplots(se_sub_log, x = "samples", outcome = "condition")
 ```
 Se realizó un análisis de componentes principales (PCA) cuyos resultados se muestran en la Figura 2. Las dos primeras componentes explican el 33,1% de la varianza total (PC1: 17,6%, PC2: 15,5%). Se observa una separación parcial por condición (Figura 2B) donde las muestras de tejido normal forman un grupo compacto y bien diferenciado, mientras que las muestras de tumor primario y metástasis hepática tienden a dispersarse hacia valores negativos en PC1. No obstante, las elipses de las tres condiciones se solapan considerablemente, lo que sugiere que existe variabilidad adicional no capturada por las dos primeras componentes. El gráfico por paciente (Figura 2C) muestra un efecto de paciente leve: las muestras del mismo paciente no siempre se agrupan entre sí, lo que indica que la condición explica parte de la variabilidad. Destaca el paciente AMC_19, cuya muestra de metástasis hepática se encuentra claramente alejada del resto, siendo la muestra más atípica del conjunto.
-```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 2. PCA exploratorio"}
+```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="PCA exploratorio"}
 #trasponemos la matriz para hacer PCA
 se_sub_t <- t(assay(se_sub_log))
 #hacemos PCA
@@ -134,7 +150,7 @@ ind_patient <- fviz_pca_ind(pca,label = "none",
                               legend.title = "Paciente") +
                               labs(title = "C. Paciente")
 
-(ind / ind_condition) | ind_patient
+ind / (ind_condition | ind_patient)
 ```
 # Preprocesado de los datos
 
@@ -168,7 +184,7 @@ dgeObj$samples
 #aplicamos la normalizacion
 dgeObj_norm <- calcNormFactors(dgeObj, method = "TMM")
 ```
-```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, out.width='100%', fig.cap="Figura 3. Expresión génica en función del tipo de muestra obtenida tras la normalización"}
+```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, fig.cap="Expresión génica en función del tipo de muestra obtenida tras la normalización"}
 #obtenemos el logaritmo de los counts
 logcounts_norm <- cpm(dgeObj_norm,log=TRUE)
 #dibujamos el boxplot con los datos normalizados
@@ -238,13 +254,13 @@ summary(summa.fit)
 ```
 En total se identificaron 720 genes diferencialmente expresados, de los cuales 325 están sobreexpresados y 395 infraexpresados en tumor primario respecto a tejido normal. Los genes que obtuvieron una mayor expresión diferencial figuran en la Tabla 1. El gen más significativo fue el 144501, con un logFC de 5.63 y un FDR de 0.00135.
 El resumen del análisis de expresión diferencial se muestra en la Figura 4. En el volcano plot se representan todos los genes analizados, destacando en azul los 10 genes más significativos. Las líneas discontinuas marcan los umbrales establecidos: |log2FC| > 2 (líneas verticales rojas) y FDR < 0.05 (línea horizontal azul).
-```{r toptable, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 1. Top 10 genes diferencialmente expresados ordenados por FDR (primary_tumor vs normal)"}
+```{r toptable, include=TRUE, echo=FALSE}
 #extraemos todos los resultados con topTable
 results <- topTable(fit.cont, coef = "primary_vs_normal",number = nrow(fit.cont))
-head(results, 10)
+kable(head(results, 10), caption = "Top 10 genes diferencialmente expresados ordenados por FDR",digits = 4)
 ```
 
-```{r volcanoplot, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 4. Volcano plot"}
+```{r volcanoplot, include=TRUE, echo=FALSE, fig.cap="Volcano plot"}
 volcanoplot(fit.cont,coef = "primary_vs_normal",highlight = 10,
             names = rownames(fit.cont))
 # Líneas de los umbrales
@@ -297,11 +313,11 @@ head(ego)
 nrow(ego)
 ```
 El análisis de sobrerepresentación incluyo un total de 325 genes sobrexpresados con un total de 87 términos GO-BP significativos entre los que encontramos los siguientes 10 mas relevantes, según se refleja en la Tabla 2.
-```{r tabla2, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 2. Top 10 términos GO sobrerepresentados con sobreexpresión"}
+```{r tabla2, include=TRUE, echo=FALSE}
 #realizamos la tabla convirtiendo a dataframe ego y añadimos las categorías 
 #que queremos que aparezcan
 top_go <- as.data.frame(ego)[1:10, c("Description", "GeneRatio", "p.adjust", "Count")]
-top_go
+kable(top_go, caption = "Top 10 términos GO-BP significativos en genes sobreexpresados",digits = 4)
 ```
 
 Entre los 87 términos GO-BP significativos sobreexpresados en el tejido tumoral primario frente al normal, podemos objetivar que los más enriquecidos se organizan en torno a 3 procesos (Figura 5) que son: remodelación y estructuración de la matriz extracelular, diferanciación de células epiteliales y metabolismo del colágeno. 
@@ -313,7 +329,7 @@ Otro proceso en línea con el anterior es la alteración de los procesos relacio
 Finalmente dentro de los mecanismos del desarrollo del cáncer colorrectal también cobraría importación la alteración de la diferenciación epitelial debido a la transformación celular del epitelio propio de la mucosa intestinal en línea con la transformación maligna celular. 
 
 
-```{r dotplot, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 5. Dotplot. ORA: Genes sobreexpresados en tumor primario"}
+```{r dotplot, include=TRUE, echo=FALSE, fig.cap="Dotplot. ORA: Genes sobreexpresados en tumor primario"}
 dotplot(ego, showCategory = 10, font.size=6)
 ```
 ## ORA de genes infraexpresados en tumor y comparación con ORA de genes sobreexpresados
@@ -342,17 +358,17 @@ nrow(egodown)
 ```
 El análisis de sobrerepresentación incluyo un total de 395 genes sobrexpresados con un total de 14 términos GO-BP significativos entre los que encontramos los siguientes, según se refleja en la Tabla 3.
 
-```{r tabla3, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Tabla 3. Top 10 términos GO sobrerepresentados con infraexpresión"}
+```{r tabla3, include=TRUE, echo=FALSE}
 #realizamos la tabla convirtiendo a dataframe ego y añadimos las categorías 
 #que queremos que aparezcan
 top_godown <- as.data.frame(egodown)[1:10, c("Description", "GeneRatio", "p.adjust", "Count")]
-top_godown
+kable(top_godown,caption = "Top 10 términos GO-BP significativos en genes infraexpresados",digits = 4)
 ```
 Si comparamos los resultados con los genes sobreexpresados en el tejido tumoral (87 términos GO-BP), los genes infraexpresados presentan únicamente 14 términos GO-BP significativos, pero con GeneRatios más elevados (0.15-0.18), mayor significación estadística y un mayor número de genes por término (Figura 6).
 
 Los términos enriquecidos giran en torno a la función inmune: leukocyte mediated immunity, lymphocyte mediated immunity, B cell mediated immunity e immunoglobulin mediated immune response, entre otros. Este silenciamiento de genes relacionados con la respuesta inmune cobra especial sentido biológico si consideramos los mecanismos de eliminación tumoral: las células tumorales presentan antígenos en su superficie a través del MHC-I, que son reconocidos por linfocitos T CD8+ citotóxicos para su eliminación. La pérdida de expresión de genes implicados en estos procesos representa por tanto un mecanismo de evasión inmune tumoral, que permitiría a las células tumorales escapar de la vigilancia inmunológica y progresar.
 
-```{r dotplotdown, include=TRUE, echo=FALSE, out.width='100%', fig.cap="Figura 6. Dotplot. ORA: Genes infraexpresados en tumor primario"}
+```{r dotplotdown, include=TRUE, echo=FALSE, fig.cap="Figura 6. Dotplot. ORA: Genes infraexpresados en tumor primario"}
 dotplot(egodown, showCategory = 10, font.size=6)
 ```
 La comparación entre ambos análisis de sobrerrepresentación revela perfiles biológicos diferenciados. Los genes sobreexpresados en el tumor primario se asocian principalmente a procesos de remodelación de la matriz extracelular y metabolismo del colágeno, reflejando la activación de mecanismos de invasión tumoral. Por el contrario, los genes infraexpresados se asocian a procesos de respuesta inmune, constituyendo un mecanismo de evasión inmune tumoral que permite la progresión e invasión del tumor.
