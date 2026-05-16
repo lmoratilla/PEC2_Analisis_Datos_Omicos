@@ -113,7 +113,7 @@ Para la realización del análisis de expresión génica se usó un subconjunto 
 
 El analisis exploratorio de la expresión génica (Figura 1) mostró distribuciones de logCPM comparables entre todas las muestras en los boxplots que se situaron en rangos similares, lo que indica la ausencia de muestras atípicas. No se observaron tampaco diferencias sistemáticas entre los tres tipos de tejido estudiados (normal, primary_tumor y liver_metastasis) a nivel de distribución de expresión génica global, aunque las muestras de metástasis hepática muestra una leve variabilidad mas apreciable respecto al resto de muestras. 
 
-```{r figura, include=TRUE, echo=FALSE, warning=FALSE, fig.cap="Expresión génica en función del tipo de muestra obtenida", fig.pos="H"}
+```{r figura, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida", fig.pos="H"}
 #debemos crear un nuevo SummarizedExperiment para usar en vez de los 
 #datos crudos, los datos transformados logCPM y así
 #trabajar con POMA
@@ -123,7 +123,7 @@ assay(se_sub_log, "counts") <- assay(se_sub, "logCPM")
 PomaBoxplots(se_sub_log, x = "samples", outcome = "condition")
 ```
 Se realizó un análisis de componentes principales (PCA) cuyos resultados se muestran en la Figura 2. Las dos primeras componentes explican el 33,1% de la varianza total (PC1: 17,6%, PC2: 15,5%). Se observa una separación parcial por condición (Figura 2B) donde las muestras de tejido normal forman un grupo compacto y bien diferenciado, mientras que las muestras de tumor primario y metástasis hepática tienden a dispersarse hacia valores negativos en PC1. No obstante, las elipses de las tres condiciones se solapan considerablemente, lo que sugiere que existe variabilidad adicional no capturada por las dos primeras componentes. El gráfico por paciente (Figura 2C) muestra un efecto de paciente leve: las muestras del mismo paciente no siempre se agrupan entre sí, lo que indica que la condición explica parte de la variabilidad. Destaca el paciente AMC_19, cuya muestra de metástasis hepática se encuentra claramente alejada del resto, siendo la muestra más atípica del conjunto.
-```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="PCA exploratorio", fig.pos="H"}
+```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "PCA exploratorio", fig.pos="H"}
 #trasponemos la matriz para hacer PCA
 se_sub_t <- t(assay(se_sub_log))
 #hacemos PCA
@@ -148,7 +148,7 @@ ind_patient <- fviz_pca_ind(pca,label = "none",
 ind / (ind_condition | ind_patient)
 ```
 
-#Preprocesado de los datos
+# Preprocesado de los datos
 
 Se realizó un preprocesado de los datos previamente identificando aquellos genes cuya expresión fuera CPM >1 en al menos 5 muestras, los cuáles formarán parte del análisis final. A su vez posteriormente se procedió a la normalización de los datos de la expresión de RNA-seq tras el filtrado. 
 ```{r preprocesado filtrado, include=FALSE}
@@ -180,7 +180,7 @@ dgeObj$samples
 #aplicamos la normalizacion
 dgeObj_norm <- calcNormFactors(dgeObj, method = "TMM")
 ```
-```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, fig.cap="Expresión génica en función del tipo de muestra obtenida tras la normalización", fig.pos="H"}
+```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida tras la normalización", fig.pos="H"}
 #obtenemos el logaritmo de los counts
 logcounts_norm <- cpm(dgeObj_norm,log=TRUE)
 #dibujamos el boxplot con los datos normalizados
@@ -215,13 +215,13 @@ group <- paste(se_pn$patient_id, se_pn$condition, sep = ".")
 design <- model.matrix(~ patient_id + condition, data = colData(se_pn))
 colnames(design) <- gsub("patient_id", "", colnames(design))
 rownames(design) <- colnames(se_pn)
-design
+kable(design)
 ```
 Y la matriz de contrastes: 
 ```{r matriz contrastes, include=TRUE, echo=FALSE}
 cont.matrix <- makeContrasts(primary_vs_normal = conditionprimary_tumor,levels = design)
 
-cont.matrix
+kable(cont.matrix)
 ```
 Dentro de esta matriz de diseño el término patient_id en la matriz de diseño genera una columna por cada paciente (excepto el de referencia, que en este caso es AMC_12). Cada columna indica con un 1 qué muestras pertenecen a ese paciente. De esta forma, el modelo puede estimar cuánto se desvía la expresión génica de cada paciente respecto al paciente de referencia (AMC_12),descontando esa diferencia antes de comparar tumor primario vs normal. Esto permite asegurar que las diferencias que encontremos sean debidas a la condición y no a la variabilidad de la expresión génica entre individuos.
 
@@ -256,7 +256,7 @@ results <- topTable(fit.cont, coef = "primary_vs_normal",number = nrow(fit.cont)
 kable(head(results, 10), caption = "Top 10 genes diferencialmente expresados ordenados por FDR",digits = 4)
 ```
 
-```{r volcanoplot, include=TRUE, echo=FALSE, fig.cap="Volcano plot", fig.pos="H"}
+```{r volcanoplot, include=TRUE, echo=FALSE, fig.cap= "Volcano plot", fig.pos="H"}
 volcanoplot(fit.cont,coef = "primary_vs_normal",highlight = 10,
             names = rownames(fit.cont))
 # Líneas de los umbrales
@@ -325,7 +325,7 @@ Otro proceso en línea con el anterior es la alteración de los procesos relacio
 Finalmente dentro de los mecanismos del desarrollo del cáncer colorrectal también cobraría importación la alteración de la diferenciación epitelial debido a la transformación celular del epitelio propio de la mucosa intestinal en línea con la transformación maligna celular. 
 
 
-```{r dotplot, include=TRUE, echo=FALSE, fig.cap="Dotplot. ORA: Genes sobreexpresados en tumor primario", fig.pos="H"}
+```{r dotplot, include=TRUE, echo=FALSE, fig.cap= "Dotplot.ORA: Genes sobreexpresados en tumor primario", fig.pos="H"}
 dotplot(ego, showCategory = 10, font.size=6)
 ```
 ## ORA de genes infraexpresados en tumor y comparación con ORA de genes sobreexpresados
@@ -364,7 +364,7 @@ Si comparamos los resultados con los genes sobreexpresados en el tejido tumoral 
 
 Los términos enriquecidos giran en torno a la función inmune: leukocyte mediated immunity, lymphocyte mediated immunity, B cell mediated immunity e immunoglobulin mediated immune response, entre otros. Este silenciamiento de genes relacionados con la respuesta inmune cobra especial sentido biológico si consideramos los mecanismos de eliminación tumoral: las células tumorales presentan antígenos en su superficie a través del MHC-I, que son reconocidos por linfocitos T CD8+ citotóxicos para su eliminación. La pérdida de expresión de genes implicados en estos procesos representa por tanto un mecanismo de evasión inmune tumoral, que permitiría a las células tumorales escapar de la vigilancia inmunológica y progresar.
 
-```{r dotplotdown, include=TRUE, echo=FALSE, fig.cap="Figura 6. Dotplot. ORA: Genes infraexpresados en tumor primario", fig.pos="H"}
+```{r dotplotdown, include=TRUE, echo=FALSE, fig.cap= "Figura 6. Dotplot. ORA: Genes infraexpresados en tumor primario", fig.pos="H"}
 dotplot(egodown, showCategory = 10, font.size=6)
 ```
 La comparación entre ambos análisis de sobrerrepresentación revela perfiles biológicos diferenciados. Los genes sobreexpresados en el tumor primario se asocian principalmente a procesos de remodelación de la matriz extracelular y metabolismo del colágeno, reflejando la activación de mecanismos de invasión tumoral. Por el contrario, los genes infraexpresados se asocian a procesos de respuesta inmune, constituyendo un mecanismo de evasión inmune tumoral que permite la progresión e invasión del tumor.
