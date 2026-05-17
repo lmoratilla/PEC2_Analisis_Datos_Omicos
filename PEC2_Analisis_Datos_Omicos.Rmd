@@ -3,12 +3,13 @@ title: "PEC2 - Análisis de Datos Ómicos"
 author: "Lucas Moratilla Lapeña"
 date: "2026-05-05"
 output:
-  pdf_document:
-    toc: true
-    toc_depth: 3
-  html_document:
-    toc: true
-    toc_depth: 3
+  pdf_document: default
+  html_document: default
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \usepackage{caption}
+  - \captionsetup{font=small, labelfont=bf}
 ---
 # Introducción
 
@@ -111,7 +112,7 @@ Para la realización del análisis de expresión génica se usó un subconjunto 
 
 El analisis exploratorio de la expresión génica (Figura 1) mostró distribuciones de logCPM comparables entre todas las muestras en los boxplots que se situaron en rangos similares, lo que indica la ausencia de muestras atípicas. No se observaron tampaco diferencias sistemáticas entre los tres tipos de tejido estudiados (normal, primary_tumor y liver_metastasis) a nivel de distribución de expresión génica global, aunque las muestras de metástasis hepática muestra una leve variabilidad mas apreciable respecto al resto de muestras. 
 
-```{r figura, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida", fig.pos="H"}
+```{r figura, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida", fig.width=12, fig.height=5}
 #debemos crear un nuevo SummarizedExperiment para usar en vez de los 
 #datos crudos, los datos transformados logCPM y así
 #trabajar con POMA
@@ -121,29 +122,26 @@ assay(se_sub_log, "counts") <- assay(se_sub, "logCPM")
 PomaBoxplots(se_sub_log, x = "samples", outcome = "condition")
 ```
 Se realizó un análisis de componentes principales (PCA) cuyos resultados se muestran en la Figura 2. Las dos primeras componentes explican el 33,1% de la varianza total (PC1: 17,6%, PC2: 15,5%). Se observa una separación parcial por condición (Figura 2B) donde las muestras de tejido normal forman un grupo compacto y bien diferenciado, mientras que las muestras de tumor primario y metástasis hepática tienden a dispersarse hacia valores negativos en PC1. No obstante, las elipses de las tres condiciones se solapan considerablemente, lo que sugiere que existe variabilidad adicional no capturada por las dos primeras componentes. El gráfico por paciente (Figura 2C) muestra un efecto de paciente leve: las muestras del mismo paciente no siempre se agrupan entre sí, lo que indica que la condición explica parte de la variabilidad. Destaca el paciente AMC_19, cuya muestra de metástasis hepática se encuentra claramente alejada del resto, siendo la muestra más atípica del conjunto.
-```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "PCA exploratorio", fig.pos="H"}
+```{r PCA, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "PCA exploratorio", fig.pos="H", fig.width=10, fig.height=8}
 #trasponemos la matriz para hacer PCA
 se_sub_t <- t(assay(se_sub_log))
 #hacemos PCA
 pca <- PCA(se_sub_t, ncp = 5, graph = FALSE)
-# Realizamos el grafico de PCA individuos
-ind <- fviz_pca_ind(pca, repel = TRUE, label="none") +
-  labs(title = "A. Individuos")
 
 # Graficamos PCA coloreado por condition
 ind_condition <- fviz_pca_ind(pca,label = "none",
                                col.ind = se_sub_log$condition,
                                addEllipses = TRUE,
                                legend.title = "Condición") +
-                               labs(title = "B. Condición")
+                               labs(title = "A. Condición")
 #Graficamos PCA por paciente 
 
 ind_patient <- fviz_pca_ind(pca,label = "none",
                               col.ind = se_sub$patient_id,
                               legend.title = "Paciente") +
-                              labs(title = "C. Paciente")
+                              labs(title = "B. Paciente")
 
-ind / (ind_condition | ind_patient)
+ind_condition | ind_patient
 ```
 
 # Preprocesado de los datos
@@ -178,7 +176,7 @@ dgeObj$samples
 #aplicamos la normalizacion
 dgeObj_norm <- calcNormFactors(dgeObj, method = "TMM")
 ```
-```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida tras la normalización", fig.pos="H"}
+```{r figura-normalizacion, include=TRUE, echo=FALSE, warning=FALSE, fig.cap= "Expresión génica en función del tipo de muestra obtenida tras la normalización", fig.pos="H", fig.width=10, fig.height=5}
 #obtenemos el logaritmo de los counts
 logcounts_norm <- cpm(dgeObj_norm,log=TRUE)
 #dibujamos el boxplot con los datos normalizados
@@ -206,7 +204,7 @@ dge_pn <- DGEList(counts = assay(se_pn, "counts"),
 dge_pn <- calcNormFactors(dge_pn, method = "TMM")
 ```
 Tras la configuración inicial según el modelo descrito previamente, la matriz de diseño es la siguiente:
-```{r matriz de diseño, include=TRUE, echo=FALSE}
+```{r matriz de diseño, include=TRUE, warning=FALSE, message=FALSE, echo=FALSE}
 #definimos los factores
 group <- paste(se_pn$patient_id, se_pn$condition, sep = ".")
 #construimos la matriz de diseño con patient_id y condition
@@ -216,7 +214,7 @@ rownames(design) <- colnames(se_pn)
 kable(design)
 ```
 Y la matriz de contrastes: 
-```{r matriz contrastes, include=TRUE, echo=FALSE}
+```{r matriz contrastes, include=TRUE,warning=FALSE, message=FALSE, echo=FALSE}
 cont.matrix <- makeContrasts(primary_vs_normal = conditionprimary_tumor,levels = design)
 
 kable(cont.matrix)
@@ -326,7 +324,8 @@ Finalmente dentro de los mecanismos del desarrollo del cáncer colorrectal tambi
 ```{r dotplot, include=TRUE, echo=FALSE, fig.cap= "Dotplot.ORA: Genes sobreexpresados en tumor primario", fig.pos="H"}
 dotplot(ego, showCategory = 10, font.size=6)
 ```
-## ORA de genes infraexpresados en tumor y comparación con ORA de genes sobreexpresados
+
+# ORA de genes infraexpresados en tumor y comparación con ORA de genes sobreexpresados
 
 ```{r infraexpresados, include=FALSE}
 #establecemos los criterios de subset de infraexpresados
