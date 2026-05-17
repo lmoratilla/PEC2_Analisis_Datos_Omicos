@@ -9,8 +9,6 @@ output:
   html_document:
     toc: true
     toc_depth: 3
-geometry: "margin=2.5cm"
-fontsize: 10.5pt
 ---
 # Introducción
 
